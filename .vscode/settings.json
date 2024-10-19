@@ -1,0 +1,8 @@
+{
+    "C_Cpp.default.compilerPath": "D:\\MinGW\\bin\\gcc.exe",
+    "files.associations": {
+        "gpio.h": "c",
+        "main.h": "c",
+        "stm32f1xx_hal.h": "c"
+    }
+}
