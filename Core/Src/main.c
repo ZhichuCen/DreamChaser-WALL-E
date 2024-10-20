@@ -85,21 +85,28 @@ void WheelControl(GPIO_TypeDef* DIR1_Port, uint16_t DIR1_Pin, GPIO_TypeDef* DIR2
     __HAL_TIM_SET_COMPARE(htim, channel, speed); 
 }
 
+
+
+/*int16_t debug_1=0;
+int16_t debug_2=0;
+int16_t debug_3=0;
+int16_t debug_4=0;*/
 void SetMecanumWheels(int16_t speedLF, int16_t speedRF, int16_t speedLB, int16_t speedRB) {
+		/*debug_1=speedLF;
+		debug_2=speedRF;
+		debug_3=speedLB;
+		debug_4=speedRB;*/
+	
     WheelControl(MOTOR_1_A_GPIO_Port, MOTOR_1_A_Pin, MOTOR_1_B_GPIO_Port, MOTOR_1_B_Pin, &htim3, TIM_CHANNEL_1, speedLF);  
-    WheelControl(MOTOR_2_A_GPIO_Port, MOTOR_2_A_Pin, MOTOR_2_B_GPIO_Port, MOTOR_2_B_Pin, &htim3, TIM_CHANNEL_2, speedLF);
-		WheelControl(MOTOR_3_A_GPIO_Port, MOTOR_3_A_Pin, MOTOR_3_B_GPIO_Port, MOTOR_3_B_Pin, &htim3, TIM_CHANNEL_3, speedLF);
-		WheelControl(MOTOR_4_A_GPIO_Port, MOTOR_4_A_Pin, MOTOR_4_B_GPIO_Port, MOTOR_4_B_Pin, &htim3, TIM_CHANNEL_4, speedLF);
+    WheelControl(MOTOR_2_A_GPIO_Port, MOTOR_2_A_Pin, MOTOR_2_B_GPIO_Port, MOTOR_2_B_Pin, &htim3, TIM_CHANNEL_2, speedRF);
+		WheelControl(MOTOR_3_A_GPIO_Port, MOTOR_3_A_Pin, MOTOR_3_B_GPIO_Port, MOTOR_3_B_Pin, &htim3, TIM_CHANNEL_3, speedLB);
+		WheelControl(MOTOR_4_A_GPIO_Port, MOTOR_4_A_Pin, MOTOR_4_B_GPIO_Port, MOTOR_4_B_Pin, &htim3, TIM_CHANNEL_4, speedRB);
 }
 
 int16_t abs16_t(int16_t x){
 	return (x>0)?x:-x;
 }
 
-int16_t debug_1=0;
-int16_t debug_2=0;
-int16_t debug_3=0;
-int16_t debug_4=0;
 
 
 void MoveMecanumWheels(int16_t vx, int16_t vy, int16_t omega) {
@@ -116,10 +123,15 @@ void MoveMecanumWheels(int16_t vx, int16_t vy, int16_t omega) {
 
     // If the maximum speed exceeds 100, scale all wheel speeds proportionally
     if (maxSpeed > 99) {
-        debug_1=speedLF = speedLF * 99 / maxSpeed;
+        /*debug_1=speedLF = speedLF * 99 / maxSpeed;
         debug_2=speedRF = speedRF * 99 / maxSpeed;
         debug_3=speedLB = speedLB * 99 / maxSpeed;
-        debug_4=speedRB = speedRB * 99 / maxSpeed;
+        debug_4=speedRB = speedRB * 99 / maxSpeed;*/
+			
+				speedLF = speedLF * 99 / maxSpeed;
+        speedRF = speedRF * 99 / maxSpeed;
+        speedLB = speedLB * 99 / maxSpeed;
+        speedRB = speedRB * 99 / maxSpeed;
     }
 
     // Set the speed for the mecanum wheels
@@ -164,6 +176,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 	if(htim==&htim2){
 			readValuePack(&rx_pack_ptr);
 			MoveMecanumWheels(rx_pack_ptr.shorts[0],rx_pack_ptr.shorts[1],rx_pack_ptr.shorts[2]);
+			//SetMecanumWheels(rx_pack_ptr.shorts[0],rx_pack_ptr.shorts[1],rx_pack_ptr.shorts[2],rx_pack_ptr.shorts[3]);
 	}
 }
 
