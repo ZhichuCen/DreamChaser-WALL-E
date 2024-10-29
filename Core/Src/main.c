@@ -137,7 +137,7 @@ void MoveMecanumWheels(int16_t vx, int16_t vy, int16_t omega) {
     }
 
     // Set the speed for the mecanum wheels
-    SetMecanumWheels(speedLF, speedRF, speedLB, speedRB);
+    SetMecanumWheels(speedLF, -speedRF, speedLB, -speedRB);
 }
 
 /*
@@ -229,6 +229,7 @@ int main(void)
 	HAL_TIM_Base_Start_IT(&htim2);
 	
 	HAL_UART_Receive_DMA(&huart1,vp_rxbuff,VALUEPACK_BUFFER_SIZE);
+	
 
 
 

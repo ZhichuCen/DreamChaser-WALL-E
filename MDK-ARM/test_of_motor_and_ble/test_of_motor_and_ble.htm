@@ -3,7 +3,7 @@
 <title>Static Call Graph - [test_of_motor_and_ble\test_of_motor_and_ble.axf]</title></head>
 <body><HR>
 <H1>Static Call Graph for image test_of_motor_and_ble\test_of_motor_and_ble.axf</H1><HR>
-<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 6190004: Last Updated: Sun Oct 20 18:23:59 2024
+<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 6190004: Last Updated: Tue Oct 29 22:51:23 2024
 <BR><P>
 <H3>Maximum Stack Usage =        188 bytes + Unknown(Functions without stacksize, Cycles, Untraceable Function Pointers)</H3><H3>
 Call chain for Maximum Stack Depth:</H3>
@@ -644,7 +644,7 @@ Global Symbols
 <BR><BR>[Called By]<UL><LI><a href="#[43]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;main
 </UL>
 
-<P><STRONG><a name="[5d]"></a>HAL_TIM_PeriodElapsedCallback</STRONG> (Thumb, 182 bytes, Stack size 24 bytes, main.o(.text.HAL_TIM_PeriodElapsedCallback))
+<P><STRONG><a name="[5d]"></a>HAL_TIM_PeriodElapsedCallback</STRONG> (Thumb, 186 bytes, Stack size 24 bytes, main.o(.text.HAL_TIM_PeriodElapsedCallback))
 <BR><BR>[Stack]<UL><LI>Max Depth = 60<LI>Call Chain = HAL_TIM_PeriodElapsedCallback &rArr; readValuePack
 </UL>
 <BR>[Calls]<UL><LI><a href="#[64]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SetMecanumWheels
@@ -719,7 +719,7 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[43]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;main
 </UL>
 
-<P><STRONG><a name="[6f]"></a>MX_GPIO_Init</STRONG> (Thumb, 156 bytes, Stack size 48 bytes, gpio.o(.text.MX_GPIO_Init))
+<P><STRONG><a name="[6f]"></a>MX_GPIO_Init</STRONG> (Thumb, 176 bytes, Stack size 48 bytes, gpio.o(.text.MX_GPIO_Init))
 <BR><BR>[Stack]<UL><LI>Max Depth = 92<LI>Call Chain = MX_GPIO_Init &rArr; HAL_GPIO_Init
 </UL>
 <BR>[Calls]<UL><LI><a href="#[69]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_GPIO_Init
@@ -789,7 +789,7 @@ Global Symbols
 <P><STRONG><a name="[6]"></a>SVC_Handler</STRONG> (Thumb, 2 bytes, Stack size 0 bytes, stm32f1xx_it.o(.text.SVC_Handler))
 <BR>[Address Reference Count : 1]<UL><LI> startup_stm32f103xb.o(RESET)
 </UL>
-<P><STRONG><a name="[64]"></a>SetMecanumWheels</STRONG> (Thumb, 330 bytes, Stack size 32 bytes, main.o(.text.SetMecanumWheels))
+<P><STRONG><a name="[64]"></a>SetMecanumWheels</STRONG> (Thumb, 324 bytes, Stack size 32 bytes, main.o(.text.SetMecanumWheels))
 <BR><BR>[Stack]<UL><LI>Max Depth = 32<LI>Call Chain = SetMecanumWheels
 </UL>
 <BR>[Calls]<UL><LI><a href="#[70]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_GPIO_WritePin
