@@ -86,17 +86,19 @@ void WheelControl(GPIO_TypeDef* DIR1_Port, uint16_t DIR1_Pin, GPIO_TypeDef* DIR2
 }
 
 
-
-/*int16_t debug_1=0;
+/*
+int16_t debug_1=0;
 int16_t debug_2=0;
 int16_t debug_3=0;
-int16_t debug_4=0;*/
+int16_t debug_4=0;
+*/
 void SetMecanumWheels(int16_t speedLF, int16_t speedRF, int16_t speedLB, int16_t speedRB) {
-		/*debug_1=speedLF;
+		/*
+		debug_1=speedLF;
 		debug_2=speedRF;
 		debug_3=speedLB;
-		debug_4=speedRB;*/
-	
+		debug_4=speedRB;
+		*/
     WheelControl(MOTOR_1_A_GPIO_Port, MOTOR_1_A_Pin, MOTOR_1_B_GPIO_Port, MOTOR_1_B_Pin, &htim3, TIM_CHANNEL_1, speedLF);  
     WheelControl(MOTOR_2_A_GPIO_Port, MOTOR_2_A_Pin, MOTOR_2_B_GPIO_Port, MOTOR_2_B_Pin, &htim3, TIM_CHANNEL_2, speedRF);
 		WheelControl(MOTOR_3_A_GPIO_Port, MOTOR_3_A_Pin, MOTOR_3_B_GPIO_Port, MOTOR_3_B_Pin, &htim3, TIM_CHANNEL_3, speedLB);
@@ -167,7 +169,8 @@ void RotateCounterClockwise(int speed) {
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 	if(huart==&huart1){
-
+			//readValuePack(&rx_pack_ptr);
+			//MoveMecanumWheels(rx_pack_ptr.shorts[0],rx_pack_ptr.shorts[1],rx_pack_ptr.shorts[2]);
 			}
 }
 
