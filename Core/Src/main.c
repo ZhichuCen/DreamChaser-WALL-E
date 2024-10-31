@@ -142,7 +142,7 @@ void MoveMecanumWheels(int16_t vx, int16_t vy, int16_t omega) {
 }
 
 void SetSingleServo(TIM_HandleTypeDef* htim, uint32_t channel, int16_t ratio){
-	__HAL_TIM_SetCompare(htim,channel,ratio+100);
+	__HAL_TIM_SetCompare(htim,channel,ratio+RATIO_TO_ARR_MAGIC_NUMBER);
 }
 
 void SetServos(int16_t ratio1,int16_t ratio2,int16_t ratio3,int16_t ratio4){
@@ -241,6 +241,11 @@ int main(void)
 	HAL_TIM_PWM_Start(&htim3,TIM_CHANNEL_2);
 	HAL_TIM_PWM_Start(&htim3,TIM_CHANNEL_3);
 	HAL_TIM_PWM_Start(&htim3,TIM_CHANNEL_4);
+	
+	HAL_TIM_PWM_Start(&htim4,TIM_CHANNEL_1);
+	HAL_TIM_PWM_Start(&htim4,TIM_CHANNEL_2);
+	HAL_TIM_PWM_Start(&htim4,TIM_CHANNEL_3);
+	HAL_TIM_PWM_Start(&htim4,TIM_CHANNEL_4);
 	
 	HAL_TIM_Base_Start_IT(&htim2);
 	
