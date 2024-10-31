@@ -40,7 +40,8 @@
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
-
+#define MAX_SPEED 100
+#define RATIO_TO_ARR_MAGIC_NUMBER 150
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
@@ -97,8 +98,8 @@ void SetMecanumWheels(int16_t speedLF, int16_t speedRF, int16_t speedLB, int16_t
 		debug_1=speedLF;
 		debug_2=speedRF;
 		debug_3=speedLB;
-		debug_4=speedRB;
-		*/
+		debug_4=speedRB;*/
+		
     WheelControl(MOTOR_1_A_GPIO_Port, MOTOR_1_A_Pin, MOTOR_1_B_GPIO_Port, MOTOR_1_B_Pin, &htim3, TIM_CHANNEL_1, speedLF);  
     WheelControl(MOTOR_2_A_GPIO_Port, MOTOR_2_A_Pin, MOTOR_2_B_GPIO_Port, MOTOR_2_B_Pin, &htim3, TIM_CHANNEL_2, speedRF);
 		WheelControl(MOTOR_3_A_GPIO_Port, MOTOR_3_A_Pin, MOTOR_3_B_GPIO_Port, MOTOR_3_B_Pin, &htim3, TIM_CHANNEL_3, speedLB);
@@ -124,20 +125,31 @@ void MoveMecanumWheels(int16_t vx, int16_t vy, int16_t omega) {
     if (abs16_t(speedRB) > maxSpeed) maxSpeed = abs16_t(speedRB);
 
     // If the maximum speed exceeds 100, scale all wheel speeds proportionally
-    if (maxSpeed > 99) {
-        /*debug_1=speedLF = speedLF * 99 / maxSpeed;
-        debug_2=speedRF = speedRF * 99 / maxSpeed;
-        debug_3=speedLB = speedLB * 99 / maxSpeed;
-        debug_4=speedRB = speedRB * 99 / maxSpeed;*/
+    if (maxSpeed > MAX_SPEED) {
+        /*debug_1=speedLF = speedLF * MAX_SPEED / maxSpeed;
+        debug_2=speedRF = speedRF * MAX_SPEED / maxSpeed;
+        debug_3=speedLB = speedLB * MAX_SPEED / maxSpeed;
+        debug_4=speedRB = speedRB * MAX_SPEED / maxSpeed;*/
 			
-				speedLF = speedLF * 99 / maxSpeed;
-        speedRF = speedRF * 99 / maxSpeed;
-        speedLB = speedLB * 99 / maxSpeed;
-        speedRB = speedRB * 99 / maxSpeed;
+				speedLF = speedLF * MAX_SPEED / maxSpeed;
+        speedRF = speedRF * MAX_SPEED / maxSpeed;
+        speedLB = speedLB * MAX_SPEED / maxSpeed;
+        speedRB = speedRB * MAX_SPEED / maxSpeed;
     }
 
     // Set the speed for the mecanum wheels
-    SetMecanumWheels(speedLF, -speedRF, speedLB, -speedRB);
+    SetMecanumWheels(-speedLF, speedRF, -speedLB, speedRB);
+}
+
+void SetSingleServo(TIM_HandleTypeDef* htim, uint32_t channel, int16_t ratio){
+	__HAL_TIM_SetCompare(htim,channel,ratio+100);
+}
+
+void SetServos(int16_t ratio1,int16_t ratio2,int16_t ratio3,int16_t ratio4){
+	SetSingleServo(&htim4,TIM_CHANNEL_1,ratio1);
+	SetSingleServo(&htim4,TIM_CHANNEL_2,ratio2);
+	SetSingleServo(&htim4,TIM_CHANNEL_3,ratio3);
+	SetSingleServo(&htim4,TIM_CHANNEL_4,ratio4);
 }
 
 /*
@@ -169,6 +181,7 @@ void RotateCounterClockwise(int speed) {
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 	if(huart==&huart1){
+
 			//readValuePack(&rx_pack_ptr);
 			//MoveMecanumWheels(rx_pack_ptr.shorts[0],rx_pack_ptr.shorts[1],rx_pack_ptr.shorts[2]);
 			}
@@ -177,8 +190,10 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 	if(htim==&htim2){
-			readValuePack(&rx_pack_ptr);
-			MoveMecanumWheels(rx_pack_ptr.shorts[0],rx_pack_ptr.shorts[1],rx_pack_ptr.shorts[2]);
+		
+		readValuePack(&rx_pack_ptr);
+		MoveMecanumWheels(rx_pack_ptr.shorts[0],rx_pack_ptr.shorts[1],-rx_pack_ptr.shorts[2]);
+		SetServos(rx_pack_ptr.shorts[3],rx_pack_ptr.shorts[4],rx_pack_ptr.shorts[5],rx_pack_ptr.shorts[6]);
 			//SetMecanumWheels(rx_pack_ptr.shorts[0],rx_pack_ptr.shorts[1],rx_pack_ptr.shorts[2],rx_pack_ptr.shorts[3]);
 	}
 }
@@ -220,6 +235,7 @@ int main(void)
   MX_TIM3_Init();
   MX_USART3_UART_Init();
   MX_TIM2_Init();
+  MX_TIM4_Init();
   /* USER CODE BEGIN 2 */
 	HAL_TIM_PWM_Start(&htim3,TIM_CHANNEL_1);
 	HAL_TIM_PWM_Start(&htim3,TIM_CHANNEL_2);
@@ -229,6 +245,7 @@ int main(void)
 	HAL_TIM_Base_Start_IT(&htim2);
 	
 	HAL_UART_Receive_DMA(&huart1,vp_rxbuff,VALUEPACK_BUFFER_SIZE);
+	
 	
 
 
