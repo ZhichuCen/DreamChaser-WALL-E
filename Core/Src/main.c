@@ -42,15 +42,50 @@
 /* USER CODE BEGIN PM */
 #define MAX_SPEED 100
 #define RATIO_TO_ARR_MAGIC_NUMBER 150
+#define RASP_BUFFER_SIZE 128
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
 
+//here is BLE vars
+_Bool RED0_BLE1=0;
+_Bool BOOL1=0;
+_Bool BOOL2=0;
+_Bool BOOL3=0;
+_Bool BOOL4=0;
+_Bool BOOL5=0;
+_Bool BOOL6=0;
+_Bool CLAW=0;
+_Bool ResetPosition=0;
+_Bool StartAuto=0;
+_Bool Man1=0;
+_Bool Man2=0;
+_Bool Man3=0;
+_Bool Man4=0;
+
+int8_t OBJ=0;//0-none, 1-garbage, 2-mine, 3-meteroite
+int8_t overall_byte=0;
+int8_t X_axis=0;
+int8_t Y_axis=0;
+int8_t ROTATION=0;
+int8_t S1=0;
+int8_t S2=0;
+int8_t S3=0;
+int8_t S4=0;
+
+
+char target_arr[6];
+_Bool finished_receiving_target=0;
+unsigned short rasp_last_index=0;
+unsigned short rasp_this_index=0;
+
+
 //const uint8_t BUFFER_SIZE=32;
 //uint8_t rx_buffer[VALUEPACK_BUFFER_SIZE];
 extern unsigned char vp_rxbuff[VALUEPACK_BUFFER_SIZE];
+unsigned char rasp_buff[RASP_BUFFER_SIZE];
 RxPack rx_pack_ptr;
 
 /* USER CODE END PV */
@@ -152,38 +187,56 @@ void SetServos(int16_t ratio1,int16_t ratio2,int16_t ratio3,int16_t ratio4){
 	SetSingleServo(&htim4,TIM_CHANNEL_4,ratio4);
 }
 
-/*
-void MoveForward(int speed) {
-    SetMecanumWheels(speed, speed, speed, speed);
+void GetData(void){
+	readValuePack(&rx_pack_ptr);
+	
+	RED0_BLE1=rx_pack_ptr.bools[0];
+	BOOL1=rx_pack_ptr.bools[1];
+	BOOL2=rx_pack_ptr.bools[2];
+	BOOL3=rx_pack_ptr.bools[3];
+	BOOL4=rx_pack_ptr.bools[4];
+	BOOL5=rx_pack_ptr.bools[5];
+	BOOL6=rx_pack_ptr.bools[6];
+	CLAW=rx_pack_ptr.bools[7];
+	ResetPosition=rx_pack_ptr.bools[8];
+	StartAuto=rx_pack_ptr.bools[9];
+	Man1=rx_pack_ptr.bools[10];
+	Man2=rx_pack_ptr.bools[11];
+	Man3=rx_pack_ptr.bools[12];
+	Man4=rx_pack_ptr.bools[13];
+
+	OBJ=rx_pack_ptr.bytes[0];//0-none, 1-garbage, 2-mine, 3-meteroite
+	overall_byte=rx_pack_ptr.bytes[1];
+	X_axis=rx_pack_ptr.bytes[2];
+	Y_axis=rx_pack_ptr.bytes[3];
+	ROTATION=rx_pack_ptr.bytes[4];
+	S1=rx_pack_ptr.bytes[5];
+	S2=rx_pack_ptr.bytes[6];
+	S3=rx_pack_ptr.bytes[7];
+	S4=rx_pack_ptr.bytes[8];
+	
 }
 
-void MoveBackward(int speed) {
-    SetMecanumWheels(-speed, -speed, -speed, -speed);
+void ReadRaspData(void){
+	if(!finished_receiving_target){
+		rasp_this_index =RASP_BUFFER_SIZE- (&huart3)->hdmarx->Instance->CNDTR;
+		
+	
+	}
+	
+	
+	
 }
-
-void MoveLeft(int speed) {
-    SetMecanumWheels(-speed, speed, speed, -speed);
-}
-
-void MoveRight(int speed) {
-    SetMecanumWheels(speed, -speed, -speed, speed);
-}
-
-void RotateClockwise(int speed) {
-    SetMecanumWheels(speed, -speed, speed, -speed);
-}
-
-void RotateCounterClockwise(int speed) {
-    SetMecanumWheels(-speed, speed, -speed, speed);
-}
-
-*/
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
-	if(huart==&huart1){
+	/*if(huart==&huart1){
 
 			//readValuePack(&rx_pack_ptr);
 			//MoveMecanumWheels(rx_pack_ptr.shorts[0],rx_pack_ptr.shorts[1],rx_pack_ptr.shorts[2]);
+			}*/
+	if(huart==&huart3){
+		ReadRaspData();
+			
 			}
 }
 
@@ -191,9 +244,10 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 	if(htim==&htim2){
 		
-		readValuePack(&rx_pack_ptr);
-		MoveMecanumWheels(rx_pack_ptr.shorts[0],rx_pack_ptr.shorts[1],-rx_pack_ptr.shorts[2]);
-		SetServos(rx_pack_ptr.shorts[3],rx_pack_ptr.shorts[4],rx_pack_ptr.shorts[5],rx_pack_ptr.shorts[6]);
+		//readValuePack(&rx_pack_ptr);
+		GetData();
+		MoveMecanumWheels(X_axis,Y_axis,-ROTATION);
+		SetServos(S1,S2,S3,S4);
 			//SetMecanumWheels(rx_pack_ptr.shorts[0],rx_pack_ptr.shorts[1],rx_pack_ptr.shorts[2],rx_pack_ptr.shorts[3]);
 	}
 }
@@ -250,6 +304,7 @@ int main(void)
 	HAL_TIM_Base_Start_IT(&htim2);
 	
 	HAL_UART_Receive_DMA(&huart1,vp_rxbuff,VALUEPACK_BUFFER_SIZE);
+	HAL_UART_Receive_DMA(&huart3,rasp_buff,RASP_BUFFER_SIZE);
 	
 	
 
