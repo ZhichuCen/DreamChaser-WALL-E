@@ -91,20 +91,25 @@ int8_t servo_control_3 = 0;
 int8_t servo_control_4 = 0;
 
 // char target_arr[6];
+
+// debug DEBUG Debug--------------
 char target_arr[6] = {'Y', 'X', 'Z', 'X', 'Y', 'Z'};
-_Bool * full_block_ptr[6]={&BOOL1,&BOOL2,&BOOL3,&BOOL4,&BOOL5,&BOOL6};
+_Bool *full_block_ptr[6] = {&BOOL1, &BOOL2, &BOOL3, &BOOL4, &BOOL5, &BOOL6};
 _Bool finished_receiving_target = 0;
 unsigned short rasp_last_index = 0;
 unsigned short rasp_this_index = 0;
 
-_Bool auto_status_flag=0;
-_Bool still_have_bonus_left=0;
+_Bool auto_status_flag = 0;
+_Bool still_have_bonus_left = 0;
+_Bool still_have_normal_left = 0;
 
 // const uint8_t BUFFER_SIZE=32;
 // uint8_t rx_buffer[VALUEPACK_BUFFER_SIZE];
 extern unsigned char vp_rxbuff[VALUEPACK_BUFFER_SIZE];
 unsigned char rasp_buff[RASP_BUFFER_SIZE];
 RxPack rx_pack_ptr;
+
+_Bool started_read_rasp=0;
 
 /* USER CODE END PV */
 
@@ -245,93 +250,186 @@ void GetData(void)
   S4 = rx_pack_ptr.bytes[8];
 }
 
+void swap_arr(uint8_t a,uint8_t b){
+	char temp=target_arr[a];
+	target_arr[a]=target_arr[b];
+	target_arr[b]=temp;
+}
+
 void ReadRaspData(void)
 {
+	
+	
   if (!finished_receiving_target)
   {
-    rasp_this_index = RASP_BUFFER_SIZE - (&huart3)->hdmarx->Instance->CNDTR;
+    //rasp_this_index = RASP_BUFFER_SIZE - (&huart3)->hdmarx->Instance->CNDTR;
+		for(int i=0;i<RASP_BUFFER_SIZE;i++){
+			if(rasp_buff[i]=='K'){
+				
+				for(int j=0;j<6;j++){
+					target_arr[j]=rasp_buff[i++];
+				}
+				break;
+			}
+		}
+		
+		if(RED0_BLE1==0){
+			swap_arr(0,1);
+			swap_arr(2,3);
+			swap_arr(4,5);
+		}
+		
+		finished_receiving_target=1;
+		
   }
 }
 
-void MoveLeftorRight(char left_or_right){
-	if(left_or_right=='L'){
-	}
-	else if(left_or_right=='R'){
-	}
+void MoveLeftorRight(char left_or_right)
+{
+  if (left_or_right == 'L')
+  {
+    MoveMecanumWheels(-100, 0, 0);
+    HAL_Delay(500);
+    MoveMecanumWheels(0, 0, 0);
+  }
+  else if (left_or_right == 'R')
+  {
+    MoveMecanumWheels(100, 0, 0);
+    HAL_Delay(500);
+    MoveMecanumWheels(0, 0, 0);
+  }
 }
 
-void MoveForwardorBackward(char for_or_back){
-	switch(for_or_back){
-		case 'F':
-			;
-			break;
-		case 'B':
-			;
-			break;
-		default:
-			break;
-	}
-	
+void MoveForwardorBackward(char for_or_back)
+{
+  switch (for_or_back)
+  {
+  case 'F':
+    MoveMecanumWheels(0, 100, 0);
+    HAL_Delay(500);
+    MoveMecanumWheels(0, 0, 0);
+    break;
+  case 'B':
+    MoveMecanumWheels(0, -100, 0);
+    HAL_Delay(500);
+    MoveMecanumWheels(0, 0, 0);
 
+    break;
+  default:
+    break;
+  }
 }
 
-void MoveUporDown(int8_t which_floor){
-	
-	switch(which_floor){
-		case 0:
-			;
-			break;
-		case 1:
-			;
-			break;
-		case 2:
-			;
-			break;
-		default:
-			break;
-	}
-	SetServos(servo_control_1, servo_control_2, servo_control_3, servo_control_4);
-	
+void MoveUporDown(int8_t which_floor)
+{
+
+  switch (which_floor)
+  {
+  case 0:;
+    break;
+  case 1:;
+    break;
+  case 2:;
+    break;
+  default:
+    break;
+  }
+  SetServos(servo_control_1, servo_control_2, servo_control_3, servo_control_4);
+}
+
+void found_and_goto_put(int8_t target_index)
+{
+  if ((target_index + 1) % 2 == 1)
+  {
+    MoveLeftorRight('L');
+  }
+  else
+  {
+    MoveLeftorRight('R');
+  }
+
+  MoveUporDown(target_index / 2);
+
+  MoveForwardorBackward('F');
+
+  servo_control_4 = CLAW_OPEN_POSITION;
+  SetServos(servo_control_1, servo_control_2, servo_control_3, servo_control_4);
+
+  HAL_Delay(500);
+
+  MoveForwardorBackward('B');
+}
+
+void none_left(void){
+	MoveMecanumWheels(0,0,100);
+	HAL_Delay(500);
+	MoveMecanumWheels(0,0,-100);
+	HAL_Delay(500);
+	MoveMecanumWheels(0,0,0);
+}
+
+void NoBonus(void)
+{
+  still_have_normal_left = 0;
+  int8_t current_normal = -1;
+  for (int i = 0; i < 6; i++)
+  {
+    if ((target_arr[i] == 'Y') && (!*full_block_ptr[i]))
+    {
+      still_have_bonus_left = 1;
+      current_normal = i;
+    }
+  }
+
+  if (still_have_normal_left)
+  {
+    found_and_goto_put(current_normal);
+  }
+  else
+  {
+    if (OBJ == 1)
+    {
+			int8_t current_gerbage=-1;
+			_Bool still_have_garbage_left = 0;
+      for (int i = 0; i < 6; i++)
+      {
+        if ((target_arr[i] == 'X') && (!*full_block_ptr[i]))
+        {
+          still_have_garbage_left = 1;
+          current_gerbage = i;
+        }
+      }
+			if(still_have_garbage_left){
+				found_and_goto_put(current_gerbage);
+			}
+    }else{
+		none_left();
+		}
+  }
 }
 
 void AutoPut(void)
 {
-	int8_t current_bonus=-1;
-	for(int i=0;i<6;i++){
-		if((target_arr[i]=='Z' )&&(!*full_block_ptr[i])){
-			still_have_bonus_left=1;
-			current_bonus=i;
-		}
-		
-		if (still_have_bonus_left){
-			//goto the bonus
-			//left and righr
-			if((current_bonus+1)%2==1){
-				MoveLeftorRight('L');
-			}else{
-				MoveLeftorRight('R');}
-			
-			MoveUporDown(current_bonus/2);
-				
-			MoveForwardorBackward('F');
-				
-			servo_control_4=CLAW_OPEN_POSITION;
-			SetServos(servo_control_1, servo_control_2, servo_control_3, servo_control_4);
-			
-			HAL_Delay(500);
-				
-			MoveForwardorBackward('B');
-			
-				
-			
-		}
-		
-	}
-	
-	
-	
-	
-	auto_status_flag=0;
+  int8_t current_bonus = -1;
+  still_have_bonus_left = 0;
+  for (int i = 0; i < 6; i++)
+  {
+    if ((target_arr[i] == 'Z') && (!*full_block_ptr[i]))
+    {
+      still_have_bonus_left = 1;
+      current_bonus = i;
+    }
+  }
+
+  if (still_have_bonus_left)
+  {
+    found_and_goto_put(current_bonus);
+  }
+  else
+  {
+    NoBonus();
+  }
+  auto_status_flag = 0;
 }
 
 void CalculateServos(void)
@@ -345,10 +443,11 @@ void Respond_to_commands(void)
 {
   if (StartAuto)
   {
-		if(!auto_status_flag){
-			auto_status_flag=1;
-			AutoPut();
-		}
+    if (!auto_status_flag)
+    {
+      auto_status_flag = 1;
+      AutoPut();
+    }
   }
   else
   {
@@ -361,10 +460,10 @@ void Respond_to_commands(void)
     else
     {
       CalculateServos();
-			
-			servo_control_4=(CLAW)?CLAW_CLOSED_POSITION:CLAW_OPEN_POSITION;
-			
-			//Manual Override :P be careful
+
+      servo_control_4 = (CLAW) ? CLAW_CLOSED_POSITION : CLAW_OPEN_POSITION;
+
+      // Manual Override :P be careful
       if (Man1)
       {
         servo_control_1 = S1;
@@ -387,10 +486,8 @@ void Respond_to_commands(void)
 
       SetServos(servo_control_1, servo_control_2, servo_control_3, servo_control_4);
     }
-		MoveMecanumWheels(X_axis, Y_axis, -ROTATION);
+    MoveMecanumWheels(X_axis, Y_axis, -ROTATION);
   }
-
-  
 }
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
@@ -402,7 +499,10 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
       }*/
   if (huart == &huart3)
   {
-    ReadRaspData();
+		if(!started_read_rasp){
+			started_read_rasp=1;
+			ReadRaspData();
+		}
   }
 }
 
