@@ -3,18 +3,18 @@
         {
             "name": "test_of_motor_and_ble",
             "includePath": [
-                "f:\\RM\\Final\\test_of_motor_and_ble\\Core\\Inc",
-                "f:\\RM\\Final\\test_of_motor_and_ble\\Drivers\\STM32F1xx_HAL_Driver\\Inc",
-                "f:\\RM\\Final\\test_of_motor_and_ble\\Drivers\\STM32F1xx_HAL_Driver\\Inc\\Legacy",
-                "f:\\RM\\Final\\test_of_motor_and_ble\\Drivers\\CMSIS\\Device\\ST\\STM32F1xx\\Include",
-                "f:\\RM\\Final\\test_of_motor_and_ble\\Drivers\\CMSIS\\Include",
+                "f:\\RM\\Final\\Final_Control\\Core\\Inc",
+                "f:\\RM\\Final\\Final_Control\\Drivers\\STM32F1xx_HAL_Driver\\Inc",
+                "f:\\RM\\Final\\Final_Control\\Drivers\\STM32F1xx_HAL_Driver\\Inc\\Legacy",
+                "f:\\RM\\Final\\Final_Control\\Drivers\\CMSIS\\Device\\ST\\STM32F1xx\\Include",
+                "f:\\RM\\Final\\Final_Control\\Drivers\\CMSIS\\Include",
                 "C:\\Keil_v5\\ARM\\ARMCLANG\\include",
                 "C:\\Keil_v5\\ARM\\ARMCLANG\\include\\arm_linux",
                 "C:\\Keil_v5\\ARM\\ARMCLANG\\include\\arm_linux_compat",
                 "C:\\Keil_v5\\ARM\\ARMCLANG\\include\\libcxx",
-                "f:\\RM\\Final\\test_of_motor_and_ble\\MDK-ARM",
-                "f:\\RM\\Final\\test_of_motor_and_ble\\Core\\Src",
-                "f:\\RM\\Final\\test_of_motor_and_ble\\Drivers\\STM32F1xx_HAL_Driver\\Src"
+                "f:\\RM\\Final\\Final_Control\\MDK-ARM",
+                "f:\\RM\\Final\\Final_Control\\Core\\Src",
+                "f:\\RM\\Final\\Final_Control\\Drivers\\STM32F1xx_HAL_Driver\\Src"
             ],
             "defines": [
                 "USE_HAL_DRIVER",
