@@ -94,6 +94,7 @@ int8_t servo_control_4 = 0;
 
 // debug DEBUG Debug--------------
 char target_arr[6] = {'Y', 'X', 'Z', 'X', 'Y', 'Z'};
+char validate_num_list[2];
 _Bool *full_block_ptr[6] = {&BOOL1, &BOOL2, &BOOL3, &BOOL4, &BOOL5, &BOOL6};
 _Bool finished_receiving_target = 0;
 unsigned short rasp_last_index = 0;
@@ -256,6 +257,26 @@ void swap_arr(uint8_t a,uint8_t b){
 	target_arr[b]=temp;
 }
 
+_Bool validate_data(){
+	int8_t my_validate_value=0;
+	for(int i=0;i<6;i++){
+		if(target_arr[i]=='Z'){
+		my_validate_value |= (1<<i);
+		}
+	}
+	
+	int8_t received_validate_value=0;
+	
+	received_validate_value+=(validate_num_list[0]-0x30)*10;
+	received_validate_value+=validate_num_list[1]-0x30;
+	
+	if(my_validate_value==received_validate_value){
+		return 1;
+	}else{
+		return 0;
+	}
+}
+
 void ReadRaspData(void)
 {
 	
@@ -266,20 +287,26 @@ void ReadRaspData(void)
 		for(int i=0;i<RASP_BUFFER_SIZE;i++){
 			if(rasp_buff[i]=='K'){
 				
+				
 				for(int j=0;j<6;j++){
 					target_arr[j]=rasp_buff[i++];
 				}
+				validate_num_list[0]=i++;
+				validate_num_list[1]=i++;
 				break;
 			}
 		}
+		if(validate_data())
+			{
 		
-		if(RED0_BLE1==0){
-			swap_arr(0,1);
-			swap_arr(2,3);
-			swap_arr(4,5);
-		}
+			if(RED0_BLE1==0){
+				swap_arr(0,1);
+				swap_arr(2,3);
+				swap_arr(4,5);
+				}
 		
-		finished_receiving_target=1;
+			finished_receiving_target=1;
+			}
 		
   }
 }
@@ -412,6 +439,21 @@ void AutoPut(void)
 {
   int8_t current_bonus = -1;
   still_have_bonus_left = 0;
+	int8_t full_count=0;
+	int8_t only_1_left=-1;
+	
+	for (int i = 0; i < 6; i++){
+		if(*full_block_ptr[i]){
+			full_count++;
+		}else{
+			only_1_left=i;
+		}
+	}
+	
+	if(full_count==5){
+			found_and_goto_put(only_1_left);
+	}else{
+	
   for (int i = 0; i < 6; i++)
   {
     if ((target_arr[i] == 'Z') && (!*full_block_ptr[i]))
@@ -429,6 +471,8 @@ void AutoPut(void)
   {
     NoBonus();
   }
+	
+	}
   auto_status_flag = 0;
 }
 
@@ -522,9 +566,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 /* USER CODE END 0 */
 
 /**
- * @brief  The application entry point.
- * @retval int
- */
+  * @brief  The application entry point.
+  * @retval int
+  */
 int main(void)
 {
   /* USER CODE BEGIN 1 */
@@ -586,17 +630,17 @@ int main(void)
 }
 
 /**
- * @brief System Clock Configuration
- * @retval None
- */
+  * @brief System Clock Configuration
+  * @retval None
+  */
 void SystemClock_Config(void)
 {
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
 
   /** Initializes the RCC Oscillators according to the specified parameters
-   * in the RCC_OscInitTypeDef structure.
-   */
+  * in the RCC_OscInitTypeDef structure.
+  */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
   RCC_OscInitStruct.HSEPredivValue = RCC_HSE_PREDIV_DIV1;
@@ -610,8 +654,9 @@ void SystemClock_Config(void)
   }
 
   /** Initializes the CPU, AHB and APB buses clocks
-   */
-  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
+  */
+  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
+                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
@@ -628,9 +673,9 @@ void SystemClock_Config(void)
 /* USER CODE END 4 */
 
 /**
- * @brief  This function is executed in case of error occurrence.
- * @retval None
- */
+  * @brief  This function is executed in case of error occurrence.
+  * @retval None
+  */
 void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
@@ -642,14 +687,14 @@ void Error_Handler(void)
   /* USER CODE END Error_Handler_Debug */
 }
 
-#ifdef USE_FULL_ASSERT
+#ifdef  USE_FULL_ASSERT
 /**
- * @brief  Reports the name of the source file and the source line number
- *         where the assert_param error has occurred.
- * @param  file: pointer to the source file name
- * @param  line: assert_param error line source number
- * @retval None
- */
+  * @brief  Reports the name of the source file and the source line number
+  *         where the assert_param error has occurred.
+  * @param  file: pointer to the source file name
+  * @param  line: assert_param error line source number
+  * @retval None
+  */
 void assert_failed(uint8_t *file, uint32_t line)
 {
   /* USER CODE BEGIN 6 */
