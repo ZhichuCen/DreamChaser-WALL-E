@@ -47,11 +47,11 @@
 // reset position
 // range:-100~100
 #define SERVO_1_RESET_POSITION 0
-#define SERVO_2_RESET_POSITION 0
-#define SERVO_3_RESET_POSITION 0
+#define SERVO_2_RESET_POSITION 100
+#define SERVO_3_RESET_POSITION 100
 
-#define CLAW_CLOSED_POSITION 0
-#define CLAW_OPEN_POSITION 40
+#define CLAW_CLOSED_POSITION 35
+#define CLAW_OPEN_POSITION 100
 
 /* USER CODE END PM */
 
@@ -85,10 +85,10 @@ int8_t S2 = 0;
 int8_t S3 = 0;
 int8_t S4 = 0;
 
-int8_t servo_control_1 = 0;
-int8_t servo_control_2 = 0;
-int8_t servo_control_3 = 0;
-int8_t servo_control_4 = 0;
+int8_t servo_control_1 = SERVO_1_RESET_POSITION;
+int8_t servo_control_2 = SERVO_2_RESET_POSITION;
+int8_t servo_control_3 = SERVO_3_RESET_POSITION;
+int8_t servo_control_4 = CLAW_OPEN_POSITION;
 
 // char target_arr[6];
 
@@ -101,7 +101,10 @@ unsigned short rasp_last_index = 0;
 unsigned short rasp_this_index = 0;
 uint16_t rasp_index = 0;
 
-_Bool auto_status_flag = 0;
+// uint8_t auto_count=0;
+// uint8_t auto_last=0;
+
+uint8_t auto_status_flag = 0;
 _Bool still_have_bonus_left = 0;
 _Bool still_have_normal_left = 0;
 
@@ -216,6 +219,10 @@ void SetSingleServo(TIM_HandleTypeDef *htim, uint32_t channel, int16_t ratio)
 
 void SetServos(int16_t ratio1, int16_t ratio2, int16_t ratio3, int16_t ratio4)
 {
+
+  ratio2 = ratio2 * 0.8 + 20;
+	ratio3 = ratio3 * 0.75 + 25;
+
   SetSingleServo(&htim4, TIM_CHANNEL_1, ratio1);
   SetSingleServo(&htim4, TIM_CHANNEL_2, ratio2);
   SetSingleServo(&htim4, TIM_CHANNEL_3, ratio3);
@@ -261,6 +268,7 @@ void swap_arr(uint8_t a, uint8_t b)
 
 _Bool validate_data()
 {
+
   int8_t my_validate_value = 0;
   for (int i = 0; i < 6; i++)
   {
@@ -291,6 +299,7 @@ void ReadRaspData(void)
   if (!finished_receiving_target)
   {
     // rasp_this_index = RASP_BUFFER_SIZE - (&huart3)->hdmarx->Instance->CNDTR;
+    rasp_index = 0;
     for (; rasp_index < RASP_BUFFER_SIZE; rasp_index++)
     {
 
@@ -320,6 +329,7 @@ void ReadRaspData(void)
         swap_arr(4, 5);
       }
 
+      // memset(rasp_buff,0,sizeof(rasp_buff));
       finished_receiving_target = 1;
     }
   }
@@ -347,12 +357,14 @@ void MoveForwardorBackward(char for_or_back)
   {
   case 'F':
     MoveMecanumWheels(0, 100, 0);
-    HAL_Delay(500);
+    HAL_Delay(1000);
     MoveMecanumWheels(0, 0, 0);
+		HAL_Delay(1000);
     break;
   case 'B':
+		HAL_Delay(1000);
     MoveMecanumWheels(0, -100, 0);
-    HAL_Delay(500);
+    HAL_Delay(2000);
     MoveMecanumWheels(0, 0, 0);
 
     break;
@@ -366,11 +378,17 @@ void MoveUporDown(int8_t which_floor)
 
   switch (which_floor)
   {
-  case 0:;
+  case 0:
+    servo_control_2 = 83;
+    servo_control_3 = 81;
     break;
-  case 1:;
+  case 1:
+    servo_control_2 = 4;
+    servo_control_3 = 27;
     break;
-  case 2:;
+  case 2:
+    servo_control_2 = -42;
+    servo_control_3 = -32;
     break;
   default:
     break;
@@ -380,6 +398,13 @@ void MoveUporDown(int8_t which_floor)
 
 void found_and_goto_put(int8_t target_index)
 {
+
+  MoveUporDown(target_index / 2);
+  SetServos(servo_control_1, servo_control_2, servo_control_3, servo_control_4);
+	servo_control_4 = CLAW_OPEN_POSITION;
+	
+	HAL_Delay(500);
+
   if ((target_index + 1) % 2 == 1)
   {
     MoveLeftorRight('L');
@@ -389,15 +414,14 @@ void found_and_goto_put(int8_t target_index)
     MoveLeftorRight('R');
   }
 
-  MoveUporDown(target_index / 2);
-
   MoveForwardorBackward('F');
+	
 
   servo_control_4 = CLAW_OPEN_POSITION;
   SetServos(servo_control_1, servo_control_2, servo_control_3, servo_control_4);
 
-  HAL_Delay(500);
 
+	
   MoveForwardorBackward('B');
 }
 
@@ -429,7 +453,7 @@ void NoBonus(void)
   }
   else
   {
-    if (OBJ == 1)
+    if (OBJ == 1 || OBJ == 0)
     {
       int8_t current_garbage = -1;
       _Bool still_have_garbage_left = 0;
@@ -460,7 +484,7 @@ void AutoPut(void)
   int8_t full_count = 0;
   int8_t only_1_left = -1;
 
-  for (int i = 0; i < 6; i++)
+  for (int8_t i = 0; i < 6; i++)
   {
     if (*full_block_ptr[i])
     {
@@ -497,7 +521,9 @@ void AutoPut(void)
       NoBonus();
     }
   }
-  auto_status_flag = 0;
+  auto_status_flag = 2;
+
+  // auto_count++;7
 }
 
 void CalculateServos(void)
@@ -511,11 +537,15 @@ void Respond_to_commands(void)
 {
   if (StartAuto)
   {
-    if (!auto_status_flag)
+    if (auto_status_flag == 0)
     {
       auto_status_flag = 1;
       AutoPut();
     }
+  }
+  else if (auto_status_flag == 2 && StartAuto == 0 && CLAW == 0)
+  {
+    auto_status_flag = 0;
   }
   else
   {
@@ -524,6 +554,8 @@ void Respond_to_commands(void)
       servo_control_1 = SERVO_1_RESET_POSITION;
       servo_control_2 = SERVO_2_RESET_POSITION;
       servo_control_3 = SERVO_3_RESET_POSITION;
+      servo_control_4 = (CLAW) ? CLAW_CLOSED_POSITION : CLAW_OPEN_POSITION;
+      SetServos(servo_control_1, servo_control_2, servo_control_3, servo_control_4);
     }
     else
     {
@@ -567,11 +599,6 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
       }*/
   if (huart == &huart3)
   {
-    if (!started_read_rasp)
-    {
-      started_read_rasp = 1;
-      ReadRaspData();
-    }
   }
 }
 
@@ -584,6 +611,13 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     GetData();
     Respond_to_commands();
 
+    if (!started_read_rasp)
+    {
+      started_read_rasp = 1;
+      ReadRaspData();
+      started_read_rasp = 0;
+    }
+
     // SetMecanumWheels(rx_pack_ptr.shorts[0],rx_pack_ptr.shorts[1],rx_pack_ptr.shorts[2],rx_pack_ptr.shorts[3]);
   }
 }
@@ -591,9 +625,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 /* USER CODE END 0 */
 
 /**
- * @brief  The application entry point.
- * @retval int
- */
+  * @brief  The application entry point.
+  * @retval int
+  */
 int main(void)
 {
   /* USER CODE BEGIN 1 */
@@ -640,6 +674,8 @@ int main(void)
   HAL_UART_Receive_DMA(&huart1, vp_rxbuff, VALUEPACK_BUFFER_SIZE);
   HAL_UART_Receive_DMA(&huart3, rasp_buff, RASP_BUFFER_SIZE);
 
+  SetServos(SERVO_1_RESET_POSITION, SERVO_2_RESET_POSITION, SERVO_3_RESET_POSITION, CLAW_OPEN_POSITION);
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -655,17 +691,17 @@ int main(void)
 }
 
 /**
- * @brief System Clock Configuration
- * @retval None
- */
+  * @brief System Clock Configuration
+  * @retval None
+  */
 void SystemClock_Config(void)
 {
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
 
   /** Initializes the RCC Oscillators according to the specified parameters
-   * in the RCC_OscInitTypeDef structure.
-   */
+  * in the RCC_OscInitTypeDef structure.
+  */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
   RCC_OscInitStruct.HSEPredivValue = RCC_HSE_PREDIV_DIV1;
@@ -679,8 +715,9 @@ void SystemClock_Config(void)
   }
 
   /** Initializes the CPU, AHB and APB buses clocks
-   */
-  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
+  */
+  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
+                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
@@ -697,9 +734,9 @@ void SystemClock_Config(void)
 /* USER CODE END 4 */
 
 /**
- * @brief  This function is executed in case of error occurrence.
- * @retval None
- */
+  * @brief  This function is executed in case of error occurrence.
+  * @retval None
+  */
 void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
@@ -711,14 +748,14 @@ void Error_Handler(void)
   /* USER CODE END Error_Handler_Debug */
 }
 
-#ifdef USE_FULL_ASSERT
+#ifdef  USE_FULL_ASSERT
 /**
- * @brief  Reports the name of the source file and the source line number
- *         where the assert_param error has occurred.
- * @param  file: pointer to the source file name
- * @param  line: assert_param error line source number
- * @retval None
- */
+  * @brief  Reports the name of the source file and the source line number
+  *         where the assert_param error has occurred.
+  * @param  file: pointer to the source file name
+  * @param  line: assert_param error line source number
+  * @retval None
+  */
 void assert_failed(uint8_t *file, uint32_t line)
 {
   /* USER CODE BEGIN 6 */
