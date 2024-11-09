@@ -50,7 +50,7 @@
 #define SERVO_2_RESET_POSITION 100
 #define SERVO_3_RESET_POSITION 100
 
-#define CLAW_CLOSED_POSITION 35
+#define CLAW_CLOSED_POSITION 45
 #define CLAW_OPEN_POSITION 100
 
 /* USER CODE END PM */
@@ -274,7 +274,7 @@ _Bool validate_data()
   {
     if (target_arr[i] == 'Z')
     {
-      my_validate_value |= (1 << i);
+      my_validate_value |= (1 << (5-i));
     }
   }
 
@@ -357,14 +357,14 @@ void MoveForwardorBackward(char for_or_back)
   {
   case 'F':
     MoveMecanumWheels(0, 100, 0);
-    HAL_Delay(1000);
+    HAL_Delay(750);
     MoveMecanumWheels(0, 0, 0);
 		HAL_Delay(1000);
     break;
   case 'B':
 		HAL_Delay(1000);
     MoveMecanumWheels(0, -100, 0);
-    HAL_Delay(2000);
+    HAL_Delay(500);
     MoveMecanumWheels(0, 0, 0);
 
     break;
@@ -379,16 +379,16 @@ void MoveUporDown(int8_t which_floor)
   switch (which_floor)
   {
   case 0:
-    servo_control_2 = 83;
-    servo_control_3 = 81;
+    servo_control_2 = 100;
+    servo_control_3 = 100;
     break;
   case 1:
-    servo_control_2 = 4;
-    servo_control_3 = 27;
+    servo_control_2 = 22;
+    servo_control_3 = 25;
     break;
   case 2:
-    servo_control_2 = -42;
-    servo_control_3 = -32;
+    servo_control_2 = -28;
+    servo_control_3 = -15;
     break;
   default:
     break;
@@ -555,6 +555,9 @@ void Respond_to_commands(void)
       servo_control_2 = SERVO_2_RESET_POSITION;
       servo_control_3 = SERVO_3_RESET_POSITION;
       servo_control_4 = (CLAW) ? CLAW_CLOSED_POSITION : CLAW_OPEN_POSITION;
+      if(Man4){
+        servo_control_4 = S4;
+      }
       SetServos(servo_control_1, servo_control_2, servo_control_3, servo_control_4);
     }
     else
