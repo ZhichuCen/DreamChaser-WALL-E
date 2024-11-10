@@ -44,13 +44,13 @@
 #define RATIO_TO_ARR_MAGIC_NUMBER 150
 #define RASP_BUFFER_SIZE 128
 
-// reset position
+// reset positionk
 // range:-100~100
 #define SERVO_1_RESET_POSITION 0
 #define SERVO_2_RESET_POSITION 100
 #define SERVO_3_RESET_POSITION 100
 
-#define CLAW_CLOSED_POSITION 45
+#define CLAW_CLOSED_POSITION 35
 #define CLAW_OPEN_POSITION 100
 
 /* USER CODE END PM */
@@ -357,7 +357,7 @@ void MoveForwardorBackward(char for_or_back)
   {
   case 'F':
     MoveMecanumWheels(0, 100, 0);
-    HAL_Delay(750);
+    HAL_Delay(400);
     MoveMecanumWheels(0, 0, 0);
 		HAL_Delay(1000);
     break;
@@ -379,16 +379,16 @@ void MoveUporDown(int8_t which_floor)
   switch (which_floor)
   {
   case 0:
-    servo_control_2 = 100;
-    servo_control_3 = 100;
+    servo_control_2 = 77;
+    servo_control_3 = 75;
     break;
   case 1:
-    servo_control_2 = 22;
-    servo_control_3 = 25;
+    servo_control_2 = 5;
+    servo_control_3 = 9;
     break;
   case 2:
-    servo_control_2 = -28;
-    servo_control_3 = -15;
+    servo_control_2 = -41;
+    servo_control_3 = -44;
     break;
   default:
     break;
